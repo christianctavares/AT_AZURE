@@ -1,0 +1,76 @@
+﻿@model Domain.Pessoa
+
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Pessoa</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Foto" class="control-label"></label>
+                <input type="file" name="FotoForm" class="form-control" />
+                <span asp-validation-for="Foto" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Nome" class="control-label"></label>
+                <input asp-for="Nome" class="form-control" />
+                <span asp-validation-for="Nome" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Telefone" class="control-label"></label>
+                <input asp-for="Telefone" class="form-control" />
+                <span asp-validation-for="Telefone" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DataNiver" class="control-label"></label>
+                <input asp-for="DataNiver" class="form-control" />
+                <span asp-validation-for="DataNiver" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="PaisId" class="control-label">Pais</label>
+                <select name="PaisId" class="form-control" id="PaisId">
+                    <option value="0">-</option>
+                    @foreach (var pais in Model.Pais)
+                    {
+                        <option value="@pais.Id">@pais.Nome</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="EstadoId" class="control-label">Estado</label>
+                <select name="EstadoId" class="form-control" id="EstadoId">
+                    <option value="0">-</option>
+                    @foreach (var estado in Model.Estado)
+                    {
+                        <option value="@estado.Id">@estado.Nome</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
