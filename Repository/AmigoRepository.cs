@@ -21,12 +21,13 @@ namespace Repository
         public async Task<IEnumerable<Amigo>> GetAllAsync()
         {
             var amigos = await _context.Amigos.Include(x => x.Pessoa).ToListAsync();
+
             return amigos;
         }
 
         public Amigo GetAmigoById(int id)
         {
-            return _context.Amigos.FirstOrDefault(x => x.Id == id);
+            return _context.Amigos.Include(x => x.Pessoa).FirstOrDefault(x => x.Id == id);
         }
 
         public async Task Save(Amigo amigo, string emailPessoa)

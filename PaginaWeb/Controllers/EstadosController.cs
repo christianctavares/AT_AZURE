@@ -11,6 +11,7 @@ using Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
+using RestSharp;
 
 namespace PaginaWeb.Controllers
 {
@@ -26,15 +27,28 @@ namespace PaginaWeb.Controllers
         // GET: Livros
         public async Task<IActionResult> Index()
         {
-            return View(await _service.GetAll());
+            var client = new RestClient();
+
+            var request = new RestRequest("https://localhost:5001/api/estados", DataFormat.Json);
+
+            var response = await client.GetAsync<List<Estado>>(request);
+
+            return View(response);
+
+            //return View(await _service.GetAll());
         }
 
 
 
         public ActionResult Details(int id)
         {
-            var estado = this._service.GetEstadoById(id);
+            //var estado = this._service.GetEstadoById(id);
+            var client = new RestClient();
+            var requestEstado = new RestRequest("https://localhost:5001/api/estados/" + id, DataFormat.Json);
 
+            var response = client.Get<Estado>(requestEstado);
+
+            var estado = response.Data;
             return View(estado);
         }
 
@@ -45,7 +59,13 @@ namespace PaginaWeb.Controllers
 
         public ActionResult Edit(int id)
         {
-            var estado = this._service.GetEstadoById(id);
+            // var estado = this._service.GetEstadoById(id);
+            var client = new RestClient();
+            var requestEstado = new RestRequest("https://localhost:5001/api/estados/" + id, DataFormat.Json);
+
+            var response = client.Get<Estado>(requestEstado);
+
+            var estado = response.Data;
             return View(estado);
         }
 
@@ -55,7 +75,13 @@ namespace PaginaWeb.Controllers
         {
             try
             {
-                this._service.Update(id, estado);
+                //this._service.Update(id, estado);
+                var client = new RestClient();
+                var requestEstado = new RestRequest("https://localhost:5001/api/estados/" + id, DataFormat.Json);
+                requestEstado.AddJsonBody(estado);
+                var response = client.Put<Estado>(requestEstado);
+                
+                
                 return RedirectToAction(nameof(Index));
             }
             catch
@@ -75,9 +101,15 @@ namespace PaginaWeb.Controllers
 
                 var urlFoto = UploadFotoEstado(estado.FotoForm);
                 estado.Foto = urlFoto;
-
+                estado.FotoForm = null;
                 var nomePais = form["nomePais"];
-                await _service.SaveAsync(estado, nomePais);
+
+                var client = new RestClient();
+                var requestEstado = new RestRequest("https://localhost:5001/api/estados?nomePais=" + nomePais, DataFormat.Json);
+                requestEstado.AddJsonBody(estado);
+
+                var response = await client.PostAsync<Estado>(requestEstado);
+                //await _service.SaveAsync(estado, nomePais);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -91,7 +123,13 @@ namespace PaginaWeb.Controllers
         // GET: AlunoController/Delete/5
         public ActionResult Delete(int id)
         {
-            var estado = this._service.GetEstadoById(id);
+            //var estado = this._service.GetEstadoById(id);
+            var client = new RestClient();
+            var requestEstado = new RestRequest("https://localhost:5001/api/estados/" + id, DataFormat.Json);
+
+            var response = client.Get<Estado>(requestEstado);
+
+            var estado = response.Data;
 
             return View(estado);
         }
@@ -103,7 +141,11 @@ namespace PaginaWeb.Controllers
         {
             try
             {
-                this._service.Delete(id);
+                var client = new RestClient();
+                var requestEstado = new RestRequest("https://localhost:5001/api/estados/" + id, DataFormat.Json);
+                requestEstado.AddJsonBody(estado);
+                var response = client.Delete<Estado>(requestEstado);
+                //this._service.Delete(id);
                 return RedirectToAction(nameof(Index));
             }
             catch

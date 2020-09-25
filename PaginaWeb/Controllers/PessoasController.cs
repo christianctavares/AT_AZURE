@@ -12,6 +12,7 @@ using Microsoft.Azure.Storage;
 using Service;
 using Microsoft.Azure.Storage.Blob;
 using PaginaWeb.ViewModel;
+using RestSharp;
 
 namespace PaginaWeb.Controllers
 {
@@ -27,26 +28,71 @@ namespace PaginaWeb.Controllers
             _estadoService = estadoService;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            return View(await _service.GetAll());
+            var client = new RestClient();
+
+            var request = new RestRequest("https://localhost:5001/api/pessoas", DataFormat.Json);
+
+            var response = client.Get<List<Pessoa>>(request);
+
+            return View(response.Data);
+
         }
 
 
 
         public ActionResult Details(Guid id)
         {
-            var pessoa = this._service.GetPessoaById(id);
-            var paisNome = _paisService.GetPaisById(Int16.Parse(pessoa.PaisId));
-            var estadoNome = _estadoService.GetEstadoById(Int16.Parse(pessoa.PaisId));
+
+            var client = new RestClient();
+            var requestPessoa = new RestRequest("https://localhost:5001/api/pessoas/" + id, DataFormat.Json);
+
+            var response = client.Get<Pessoa>(requestPessoa);
+
+            var pessoa = response.Data;
+
+
+
+            var requestPais = new RestRequest("https://localhost:5001/api/paises/" + pessoa.PaisId.ToString(), DataFormat.Json);
+
+            var responsePais = client.Get<Pais>(requestPais);
+
+            var paisNome = responsePais.Data;
+
+
+            var requestEstado= new RestRequest("https://localhost:5001/api/estados/" + pessoa.EstadoId.ToString(), DataFormat.Json);
+
+            var responseEstado = client.Get<Estado>(requestEstado);
+
+            var estadoNome = responseEstado.Data;
+
+           
+            if(paisNome == null)
+            {
+                paisNome = new Pais();
+                paisNome.Nome = "Pais Deletado";
+            }
+            if (estadoNome == null)
+            {
+                estadoNome = new Estado();
+                estadoNome.Nome = "Estado Deletado";
+            }
             pessoa.PaisId = paisNome.Nome;
             pessoa.EstadoId = estadoNome.Nome;
             return View(pessoa);
+
         }
 
         public ActionResult DetailsAmigos(Guid id)
         {
-            var pessoa = this._service.GetPessoaById(id);
+            var client = new RestClient();
+            var request = new RestRequest("https://localhost:5001/api/pessoas/" + id, DataFormat.Json);
+
+            var response = client.Get<Pessoa>(request);
+
+            var pessoa = response.Data;
+            
             var list = new List<Amigo>();
 
             foreach (var item in pessoa.Amigos)
@@ -59,17 +105,21 @@ namespace PaginaWeb.Controllers
 
         public ActionResult Create()
         {
-            //var viewModel = new CriarPessoaViewModel();
-            var paises = _paisService.GetAll().Result;
+            
+            var client = new RestClient();
+
+            var requestPais = new RestRequest("https://localhost:5001/api/paises", DataFormat.Json);
+            var paises = client.Get<List<Pais>>(requestPais);
             var listaDePaises = new List<Pais>();
-            foreach (var pais in paises)
+            foreach (var pais in paises.Data)
             {
                 listaDePaises.Add(pais);
             }
 
-            var estados = _estadoService.GetAll().Result;
+            var requestEstado = new RestRequest("https://localhost:5001/api/estados", DataFormat.Json);
+            var estados = client.Get<List<Estado>>(requestEstado);
             var listaDeEstados = new List<Estado>();
-            foreach (var estado in estados)
+            foreach (var estado in estados.Data)
             {
                 listaDeEstados.Add(estado);
             }
@@ -78,13 +128,17 @@ namespace PaginaWeb.Controllers
             pessoa.Pais = listaDePaises;
             pessoa.Estado = listaDeEstados;
             
-
             return View(pessoa);
         }
 
         public ActionResult Edit(Guid id)
         {
-            var pessoa = this._service.GetPessoaById(id);
+            var client = new RestClient();
+            var requestPessoa = new RestRequest("https://localhost:5001/api/pessoas/" + id, DataFormat.Json);
+
+            var response = client.Get<Pessoa>(requestPessoa);
+
+            var pessoa = response.Data;
             return View(pessoa);
         }
 
@@ -94,7 +148,11 @@ namespace PaginaWeb.Controllers
         {
             try
             {
-                this._service.Update(id, pessoa);
+                var client = new RestClient();
+                var requestPessoa = new RestRequest("https://localhost:5001/api/pessoas/" + id, DataFormat.Json);
+                requestPessoa.AddJsonBody(pessoa);
+                var response = client.Put<Pessoa>(requestPessoa);
+                
                 return RedirectToAction(nameof(Index));
             }
             catch
@@ -116,8 +174,11 @@ namespace PaginaWeb.Controllers
 
                 pessoa.Foto = urlFoto;
 
-
-                _service.Save(pessoa);
+                var client = new RestClient();
+                var requestPessoa = new RestRequest("https://localhost:5001/api/pessoas", DataFormat.Json);
+                pessoa.FotoForm = null;
+                requestPessoa.AddJsonBody(pessoa);
+                var response = client.Post<Pessoa>(requestPessoa);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -131,19 +192,28 @@ namespace PaginaWeb.Controllers
         // GET: AlunoController/Delete/5
         public ActionResult Delete(Guid id)
         {
-            var pessoa = this._service.GetPessoaById(id);
+            var client = new RestClient();
+            var requestPessoa = new RestRequest("https://localhost:5001/api/pessoas/" + id, DataFormat.Json);
+
+            var response = client.Get<Pessoa>(requestPessoa);
+
+            var pessoa = response.Data;
 
             return View(pessoa);
         }
 
-        // POST: AlunoController/Delete/5
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(Guid id, Pessoa pessoa)
         {
             try
             {
-                this._service.Delete(id);
+                var client = new RestClient();
+                var requestPessoa = new RestRequest("https://localhost:5001/api/pessoas/" + id, DataFormat.Json);
+
+                var response = client.Delete<Pessoa>(requestPessoa);
+
                 return RedirectToAction(nameof(Index));
             }
             catch

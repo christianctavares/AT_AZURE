@@ -11,6 +11,7 @@ using Service;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.AspNetCore.Http;
+using RestSharp;
 
 namespace PaginaWeb.Controllers
 {
@@ -25,21 +26,40 @@ namespace PaginaWeb.Controllers
 
         public async Task<IActionResult> Index()
         {
-            return View(await _service.GetAll());
+            var client = new RestClient();
+
+            var request = new RestRequest("https://localhost:5001/api/paises", DataFormat.Json);
+
+            var response = await client.GetAsync<List<Pais>>(request);
+
+            return View(response);
         }
 
 
 
         public ActionResult Details(int id)
         {
-            var pais = this._service.GetPaisById(id);
+            //var pais = this._service.GetPaisById(id);
+            var client = new RestClient();
+            var requestPais = new RestRequest("https://localhost:5001/api/paises/" + id, DataFormat.Json);
 
+            var response = client.Get<Pais>(requestPais);
+
+            var pais = response.Data;
             return View(pais);
         }
 
         public ActionResult DetailsEstados(int id)
         {
-            var pais = this._service.GetPaisById(id);
+
+            //var pais = this._service.GetPaisById(id);
+            var client = new RestClient();
+            var request = new RestRequest("https://localhost:5001/api/paises/" + id, DataFormat.Json);
+
+            var response = client.Get<Pais>(request);
+
+            var pais = response.Data;
+
             var list = new List<Estado>();
             foreach (var item in pais.Estados)
             {
@@ -56,7 +76,14 @@ namespace PaginaWeb.Controllers
 
         public ActionResult Edit(int id)
         {
-            var pais = this._service.GetPaisById(id);
+            //var pais = this._service.GetPaisById(id);
+            var client = new RestClient();
+            var requestPais = new RestRequest("https://localhost:5001/api/paises/" + id, DataFormat.Json);
+
+            var response = client.Get<Pais>(requestPais);
+
+            var pais = response.Data;
+
             return View(pais);
         }
 
@@ -66,7 +93,11 @@ namespace PaginaWeb.Controllers
         {
             try
             {
-                this._service.Update(id, pais);
+                //this._service.Update(id, pais);
+                var client = new RestClient();
+                var requestPais = new RestRequest("https://localhost:5001/api/paises/" + id, DataFormat.Json);
+                requestPais.AddJsonBody(pais);
+                var response = client.Put<Pais>(requestPais);
                 return RedirectToAction(nameof(Index));
             }
             catch
@@ -86,7 +117,13 @@ namespace PaginaWeb.Controllers
 
                 var urlFoto = UploadFotoPais(pais.FotoForm);
                 pais.Foto = urlFoto;
-                _service.Save(pais);
+
+                var client = new RestClient();
+                var requestPais = new RestRequest("https://localhost:5001/api/paises", DataFormat.Json);
+                pais.FotoForm = null;
+                requestPais.AddJsonBody(pais);
+                var response = client.Post<Pais>(requestPais);
+                //_service.Save(pais);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -100,7 +137,13 @@ namespace PaginaWeb.Controllers
         // GET: AlunoController/Delete/5
         public ActionResult Delete(int id)
         {
-            var pais = this._service.GetPaisById(id);
+            // var pais = this._service.GetPaisById(id);
+            var client = new RestClient();
+            var requestPais = new RestRequest("https://localhost:5001/api/paises/" + id, DataFormat.Json);
+
+            var response = client.Get<Pais>(requestPais);
+
+            var pais = response.Data;
 
             return View(pais);
         }
@@ -112,7 +155,11 @@ namespace PaginaWeb.Controllers
         {
             try
             {
-                this._service.Delete(id);
+                var client = new RestClient();
+                var requestPais = new RestRequest("https://localhost:5001/api/paises/" + id, DataFormat.Json);
+
+                var response = client.Delete<Pais>(requestPais);
+                //this._service.Delete(id);
                 return RedirectToAction(nameof(Index));
             }
             catch

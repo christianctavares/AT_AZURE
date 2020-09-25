@@ -9,6 +9,7 @@ using Domain;
 using Repository.Context;
 using Service;
 using Microsoft.AspNetCore.Http;
+using RestSharp;
 
 namespace PaginaWeb.Controllers
 {
@@ -21,14 +22,28 @@ namespace PaginaWeb.Controllers
             _service = service;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> IndexAsync()
         {
+            var client = new RestClient();
+
+            var request = new RestRequest("https://localhost:5001/api/amigos", DataFormat.Json);
+
+            var response = await client.GetAsync<List<Amigo>>(request);
+            
+            //return View(response);
             return View(await _service.GetAll());
         }
 
         public ActionResult Details(int id)
         {
-            var amigo = this._service.GetAmigoById(id);
+
+            var client = new RestClient();
+            var requestAmigo = new RestRequest("https://localhost:5001/api/amigos/" + id, DataFormat.Json);
+
+            var response = client.Get<Amigo>(requestAmigo);
+
+            var amigo = response.Data;
+            //var amigo = this._service.GetAmigoById(id);
 
             return View(amigo);
         }
@@ -40,7 +55,13 @@ namespace PaginaWeb.Controllers
 
         public ActionResult Edit(int id)
         {
-            var amigo = this._service.GetAmigoById(id);
+            var client = new RestClient();
+            var requestAmigo = new RestRequest("https://localhost:5001/api/amigos/" + id, DataFormat.Json);
+
+            var response = client.Get<Amigo>(requestAmigo);
+
+            var amigo = response.Data;
+            //var amigo = this._service.GetAmigoById(id);
             return View(amigo);
         }
 
@@ -50,7 +71,11 @@ namespace PaginaWeb.Controllers
         {
             try
             {
-                this._service.Update(id, amigo);
+                var client = new RestClient();
+                var requestAmigo = new RestRequest("https://localhost:5001/api/amigos/" + id, DataFormat.Json);
+                requestAmigo.AddJsonBody(amigo);
+                var response = client.Put<Amigo>(requestAmigo);
+                //this._service.Update(id, amigo);
                 return RedirectToAction(nameof(Index));
             }
             catch
@@ -61,7 +86,7 @@ namespace PaginaWeb.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> CreateAsync(Amigo amigo, IFormCollection form)
+        public ActionResult Create(Amigo amigo, IFormCollection form)
         {
             try
             {
@@ -69,7 +94,13 @@ namespace PaginaWeb.Controllers
                     return View(amigo);
 
                 var nomePessoa = form["nomePessoa"];
-                await _service.SaveAsync(amigo, nomePessoa);
+
+                var client = new RestClient();
+                var requestAmigo = new RestRequest("https://localhost:5001/api/amigos?nomePessoa=" + nomePessoa, DataFormat.Json);
+                requestAmigo.AddJsonBody(amigo);
+                
+                var response = client.Post<Amigo>(requestAmigo);
+                //await _service.SaveAsync(amigo, nomePessoa);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -83,9 +114,13 @@ namespace PaginaWeb.Controllers
         // GET: AlunoController/Delete/5
         public ActionResult Delete(int id)
         {
-            var amigo = this._service.GetAmigoById(id);
+            var client = new RestClient();
+            var requestAmigo = new RestRequest("https://localhost:5001/api/amigos/" + id, DataFormat.Json);
+            
+            var response = client.Get<Amigo>(requestAmigo);
+            //var amigo = this._service.GetAmigoById(id);
 
-            return View(amigo);
+            return View(response.Data);
         }
 
         // POST: AlunoController/Delete/5
@@ -95,7 +130,11 @@ namespace PaginaWeb.Controllers
         {
             try
             {
-                this._service.Delete(id);
+                var client = new RestClient();
+                var requestAmigo = new RestRequest("https://localhost:5001/api/amigos/" + id, DataFormat.Json);
+                requestAmigo.AddJsonBody(amigo);
+                var response = client.Delete<Amigo>(requestAmigo);
+                //this._service.Delete(id);
                 return RedirectToAction(nameof(Index));
             }
             catch

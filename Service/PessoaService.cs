@@ -26,7 +26,6 @@ namespace Service
         return Repository.GetPessoaById(id);
     }
 
-
     public Pessoa GetPessoaByEmail(string nome)
     {
         return Repository.GetPessoaByEmail(nome);

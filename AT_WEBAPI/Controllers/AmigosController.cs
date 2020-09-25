@@ -25,6 +25,7 @@ namespace AT_WEBAPI.Controllers
         [HttpGet]
         public async Task<IEnumerable<Amigo>> GetAsync()
         {
+
             return await _service.GetAll();
         }
 

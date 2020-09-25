@@ -38,8 +38,6 @@ namespace PaginaWeb.Controllers
             var paises = _paisService.GetAll();
             paginaInicial.QuantidadePais = paises.Result.Count();
 
-
-
             return View(paginaInicial);
         }
 
